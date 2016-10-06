@@ -8,13 +8,34 @@
 	}
 	
 	
-	//kas kasutaja tahab v‰lja logida
+	//kas kasutaja tahab v√§lja logida
 	// kas aadressireal on logout olemas
 	if (isset($_GET["logout"])) {
 		
 		session_destroy();
 		
 		header("Location: login.php");
+		
+	}
+	function saveNote($note, $color) {
+		
+		$mysqli = new mysqli(
+		
+		$GLOBALS["serverHost"], 
+		$GLOBALS["serverUsername"],  
+		$GLOBALS["serverPassword"],  
+		$GLOBALS["database"]
+		
+		);
+		$stmt = $mysqli->prepare("INSERT INTO colorNotes (note, color) VALUES (?, ?)");
+		echo $mysqli->error;
+		
+		$stmt->bind_param("ss", $note, $color );
+		if ( $stmt->execute() ) {
+			echo "salvestamine √µnnestus";	
+		} else {	
+			echo "ERROR ".$stmt->error;
+		}
 		
 	}
 	
@@ -26,26 +47,73 @@
 		saveNote($_POST["note"], $_POST["color"]);
 		
 	}
+	
+	$notes = getAllNotes();
+	
+	echo "<pre>";
+	var_dump($notes[1]->noteColor);
+	echo "</pre>";
 ?>
 
 <h1>Data</h1>
 <p>
 	Tere tulemast <?=$_SESSION["userEmail"];?>!
-	<a href="?logout=1">Logi v‰lja</a>
+	<a href="?logout=1">Logi v√§lja</a>
 </p>
-<h2>M‰rkmed</h2>
+
+
+
+<h2>M√§rkmed</h2>
 <form method="POST">
 			
-	<label>M‰rkus</label><br>
-	<input name="note" type="text">
-	
-	<br><br>
-	
-	<label>V‰rv</label><br>
-	<input name="color" type="color">
-				
-	<br><br>
-	
-	<input type="submit">
+			<label>M√§rkus</label><br>
+			<input name="note" type="text">
+			
+			<br><br>
+			
+			<label>V√§rv</label><br>
+			<input name="color" type="color">
+						
+			<br><br>
+			
+			<input type="submit">
+		
+		</form>
+			
+<?php
 
-</form>
+foreach ($notes as $n) {
+	$style = "
+	
+	width:200px;
+	min-height:200px;
+	border:1px solid gray;
+	background-color:".$n->noteColor.";";
+	
+	echo "<p style='".$style."'>".$n->note."</p>";
+}
+
+?>
+
+<h2 style="clear:both;">Tabel</h2>
+<?php
+	
+	$html = "<table>";
+		
+		$html .= "<tr>";
+			$html .= "<th>id</th>";
+			$html .= "<th>M√§rkus</th>";
+			$html .= "<th>V√§rv</th>";
+		$html .= "</tr>";
+	
+	foreach ($notes as $note) {
+		$html .= "<tr>";
+			$html .= "<td>".$note->id."</td>";
+			$html .= "<td>".$note->note."</td>";
+			$html .= "<td>".$note->noteColor."</td>";
+		$html .= "</tr>";
+	}
+	$html .= "</table>";
+	
+	echo $html;
+?>
